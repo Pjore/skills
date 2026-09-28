@@ -13,8 +13,7 @@ Make commits that are easy to review and safe to ship:
 
 ## Inputs to ask for (if missing)
 - Single commit or multiple commits? (If unsure: default to multiple small commits when there are unrelated changes.)
-- Commit style: Conventional Commits are required.
-- Any rules: max subject length, required scopes.
+- Repo-specific rules: max subject length, required scopes.
 
 ## Workflow (checklist)
 1) Inspect the working tree before staging
@@ -42,10 +41,10 @@ Make commits that are easy to review and safe to ship:
      - blank line
      - body (what/why, not implementation diary)
      - footer (BREAKING CHANGE) if needed
-   - Prefer an editor for multi-line messages: `git commit -v`
+   - Commit non-interactively: `git commit -m "type(scope): summary" -m "body"` (an editor would block the agent's shell)
    - Use `references/commit-message-template.md` if helpful.
 7) Run the smallest relevant verification
-   - Run the repo's fastest meaningful check (unit tests, lint, or build) before moving on.
+   - Run the repo's fastest meaningful check (from its AGENTS.md) before moving on.
 8) Repeat for the next commit until the working tree is clean
 
 ## Deliverable

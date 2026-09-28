@@ -14,7 +14,7 @@ description: <what it does> + <when to use it>, with concrete trigger phrases
 ## Writing the `description`
 
 - **Say what it does AND when to use it**, both in one field — not just a category label. "Formats code" is useless; "Formats Python files with black; use before committing or when asked to lint" is not.
-- **Include trigger phrases** the user is likely to actually say, e.g. this repo's `grilling` skill: "Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases." That phrase-matching is what makes implicit invocation reliable.
+- **Include trigger phrases** the user is likely to actually say, e.g. the `grilling` skill: "Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases." That phrase-matching is what makes implicit invocation reliable.
 - **Front-load the distinguishing part.** The model scans many descriptions at once; bury the trigger condition and it gets skipped over.
 - **Don't describe internal steps here** — that's the body's job. The description's only job is discovery.
 
@@ -32,3 +32,5 @@ description: <what it does> + <when to use it>, with concrete trigger phrases
 - **Body duplicating the description**, or vice versa — say the "when" once, in the description.
 - **`disable-model-invocation` used as a workaround** for a weak description, instead of fixing the description itself.
 - **Referencing `/memories/` from a skill file.** Treat this the same as a broken link — extract the content into `references/` instead.
+- **History and rationale.** Changelog notes, "we used to", or reasons something was left out. The agent acts on the present; cut them.
+- **Hardcoded project commands in a reusable skill** (e.g. `pnpm test` in a generic workflow). Point to the consuming repo's AGENTS.md for its commands instead.

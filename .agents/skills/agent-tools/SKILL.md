@@ -50,9 +50,9 @@ description: What it does and when to use it.
 
 **Trigger:** Agent matches task intent to the `description` field and loads the full skill body.
 
-**Maintain:** Keep the body 200–1500 words and under 150 lines; move detail to `references/`. Update `description` when scope changes. See [references/SKILL-FORMAT.md](references/SKILL-FORMAT.md) for writing the `description`, body conventions, and anti-patterns to catch when auditing.
+**Maintain:** Move detail to `references/`. Update `description` when scope changes. See [references/SKILL-FORMAT.md](references/SKILL-FORMAT.md) for writing the `description`, body conventions, and anti-patterns to catch when auditing.
 
-**Don't register in-place skills in `agents.toml`.** A skill already committed at `.agents/skills/<name>/SKILL.md` needs no `[[skills]]` `path:` entry — copilot/pi discover it natively at that path regardless, and dotagents' per-tool symlink (Claude, Cursor) is driven by the `agents` array, not by which skills are declared. Only declare a skill in `agents.toml` when its source is *external* (a different repo) and needs fetching/pinning.
+**`agents.toml` declares external skills only** (sourced from another repo). A skill committed at `.agents/skills/<name>/` needs no `[[skills]]` entry — copilot/pi discover it at that path, and dotagents' per-tool symlinks follow the `agents` array.
 
 ---
 
@@ -62,9 +62,10 @@ description: What it does and when to use it.
 - **Write for the reader, not for humans.** No onboarding tone, no encouragement, no filler transitions. A checklist beats a paragraph.
 - **Keep it current or delete it.** An instruction that lies is worse than no instruction — the agent will follow it and fail. When auditing, verify claims against the repo (run the stated command, check the referenced path exists) rather than trusting the prose.
 - **Edit inline, immediately**, the moment you spot a stale or wrong instruction — don't batch fixes for later, and don't just propose them: fix them and note what you changed.
-- **Never write void/negative statements** ("there is no X", "don't look for Y, it doesn't exist") to patch over an agent's past confusion. Every session starts from a clean slate — the agent has no memory of that confusion, so the disclaimer is pure token cost with no reader who needs it. If a stale reference caused the confusion, find and fix or remove that reference instead of adding a warning about it.
-- **Bundled scripts live under the skill's own `scripts/` directory** (`.agents/skills/<name>/scripts/`), never elsewhere. Only bundle a script when the logic is complex, reused often, or needs deterministic reliability — a one-off two-command sequence belongs inline in the body, not as a script.
-- **Keep every file 200–1500 words and under 150 lines**, excluding frontmatter. Below 200 there's usually not enough to justify a separate file; above 1500 words or 150 lines it belongs in a linked reference instead of the main body.
+- **Describe the current state only.** The reader has no memory of earlier sessions or versions. Cut history ("was moved", "previously", "no longer"), justifications for what isn't there ("not worth a script"), and void statements ("there is no X"). If a stale reference caused confusion, fix or remove that reference instead of warning about it.
+- **One source of truth per fact.** When two files state the same rule, keep it in one and link from the other; a duplicated rule drifts into a contradiction.
+- **Bundled scripts live in the skill's own `scripts/`.** Bundle only complex, reused, or reliability-critical logic; short command sequences go inline.
+- **Keep every file under 1500 words and 150 lines** (excluding frontmatter); smaller is better. Move overflow to a linked reference.
 
 ### AGENTS.md vs. a Skill
 
@@ -99,7 +100,7 @@ Body: purpose, constraints, step-by-step behavior.
 
 **Trigger:** User selects the agent mode, or a parent agent delegates to a sub-agent by name.
 
-**Maintain:** Update `tools` when capabilities change. Adopt body when process evolves. Keep description accurate for discoverability.
+**Maintain:** Update `tools` when capabilities change and the body when the process changes. Keep `description` accurate for discoverability.
 
 ---
 

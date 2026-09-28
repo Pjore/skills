@@ -13,6 +13,8 @@ description: "Enforce secure credential handling for any repo with a gitignored 
 source .agents/skills/credential-security/scripts/load-credentials.sh
 ```
 
+If the repo's AGENTS.md names its own loader script, use that one instead. Always `source` on its own line — `source … | tail` runs in a subshell and the exports are lost.
+
 ## Prohibited Actions
 
 | Action | Why |
@@ -24,7 +26,7 @@ source .agents/skills/credential-security/scripts/load-credentials.sh
 
 ## Setup
 
-No copying needed — dotagents installs [scripts/load-credentials.sh](scripts/load-credentials.sh) directly at `.agents/skills/credential-security/scripts/load-credentials.sh` in the target repo. It sources `.env` with `set -a` so variables are exported to child processes, and no-ops safely in CI when secrets already exist as injected env vars.
+[scripts/load-credentials.sh](scripts/load-credentials.sh) sources `.env` (or the path given as `$1`) with `set -a`, so variables reach child processes. Without a `.env` it still succeeds when variables are already injected (CI).
 
 ## Writing New Scripts
 

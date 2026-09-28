@@ -8,38 +8,19 @@ category: workflow
 # GitHub Auth in Coder Workspaces
 
 Coder workspaces provision GitHub access via **Coder external auth** (OAuth), not a
-long-lived PAT. The token expires (anywhere from ~30 min to a few hours depending on
-the template), so `gh` and `git push` intermittently fail with `HTTP 401: Bad
-credentials` unless refreshed.
+long-lived PAT. The token expires (~30 min to a few hours), so `gh` and `git push`
+intermittently fail with `HTTP 401: Bad credentials` unless refreshed.
 
 ## How it works
 
-Every Coder template in `awesome-infra` (`coder/templates/*/main.tf`) injects a
-`ghtoken-refresh` bash function into `~/.bashrc` at workspace build time:
+Coder templates that use external auth (in `awesome-infra`: `copilot-cli`, `copilot-mux`,
+`squad`, `squad-acp`, `tmux-copilot-cli`, `tmux-pi`) define a `ghtoken-refresh` bash
+function in `~/.bashrc`. Check with `bash -ic 'type ghtoken-refresh'`.
 
-```bash
-ghtoken-refresh() {
-  local token
-  if token=$(coder external-auth access-token github 2>/dev/null) && [ -n "$token" ] && [ "$token" != "null" ]; then
-    echo "export GITHUB_TOKEN='$token'" > ~/.github-token-env
-    echo "export GH_TOKEN='$token'" >> ~/.github-token-env
-    echo "export GITHUB_COPILOT_TOKEN='$token'" >> ~/.github-token-env
-    chmod 600 ~/.github-token-env
-    source ~/.github-token-env
-    echo "✓ GitHub token refreshed"
-  fi
-}
-```
-
-It calls `coder external-auth access-token github` to mint a fresh token, writes it
-to `~/.github-token-env` (`GITHUB_TOKEN`, `GH_TOKEN`, `GITHUB_COPILOT_TOKEN`), and
-`source`s it into the current shell. `~/.bashrc` also auto-sources
-`~/.github-token-env` on every new interactive shell, so already-open terminals pick
-up the latest token automatically.
-
-`~/.bashrc` is only sourced for **interactive** shells (`-i`). This is authoritative
-in `awesome-infra`'s templates — don't hand-edit `~/.bashrc` in a workspace; fix the
-template instead.
+It runs `coder external-auth access-token github`, writes the token to
+`~/.github-token-env` (`GITHUB_TOKEN`, `GH_TOKEN`, `GITHUB_COPILOT_TOKEN`), and
+`source`s it. New interactive shells auto-source `~/.github-token-env`. Change this
+behavior in the template, not in a workspace's `~/.bashrc`.
 
 ## Which pattern to use
 
@@ -72,20 +53,12 @@ source ~/.github-token-env && git push ...
 ```
 
 If unsure which applies, try Pattern A first; if the token doesn't stick between
-calls, fall back to Pattern B.
+calls, use Pattern B.
 
-## Do not
+## Rules
 
-- Run `~/.copilot-token-refresh.sh` directly — it's an unrelated background daemon
-  with an infinite loop, not a one-shot refresh.
-- Assume the token lasts the whole session — refresh again if a `gh`/`git push`
-  call fails after a long gap.
-
-## Troubleshooting
-
-| Symptom | Cause | Fix |
-|---|---|---|
-| `gh`: `Bad credentials` / `HTTP 401` | Token expired | `ghtoken-refresh` (or Pattern B), then retry |
-| Token refreshed but next tool call still fails | Each call is a fresh non-interactive shell | Use Pattern B — `source ~/.github-token-env` in every call |
-| `ghtoken-refresh: command not found` | Non-interactive shell, function only in `~/.bashrc` | `bash -i -c "ghtoken-refresh"` |
-| Refresh succeeds but `gh` still uses stale token | `GH_TOKEN` was exported earlier in a long-lived shell and shadows the file | `unset GH_TOKEN GITHUB_TOKEN` then re-source |
+- Never run `~/.copilot-token-refresh.sh` — it's a background daemon with an infinite
+  loop, not a one-shot refresh.
+- Refresh again whenever a `gh`/`git push` call returns 401 after a long gap.
+- If `gh` still sends a stale token after refreshing, an earlier `export GH_TOKEN` in
+  the same long-lived shell shadows it: `unset GH_TOKEN GITHUB_TOKEN`, then re-source.

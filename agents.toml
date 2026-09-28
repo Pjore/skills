@@ -1,9 +1,9 @@
 version = 1
 agents = ["copilot", "pi"]
 
-# This repo's own 9 skills need no [[skills]] entry: they already live at
-# .agents/skills/<name>, which is where copilot/pi discover skills natively.
-# Only external dependencies need declaring here.
+# Skills published from this repo need no [[skills]] entry: they already live at
+# .agents/skills/<name>, where copilot/pi discover them. Only external
+# dependencies are declared here.
 
 [[skills]]
 name = "dotagents"
