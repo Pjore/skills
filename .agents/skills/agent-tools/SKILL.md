@@ -62,6 +62,8 @@ description: What it does and when to use it.
 - **Write for the reader, not for humans.** No onboarding tone, no encouragement, no filler transitions. A checklist beats a paragraph.
 - **Keep it current or delete it.** An instruction that lies is worse than no instruction — the agent will follow it and fail. When auditing, verify claims against the repo (run the stated command, check the referenced path exists) rather than trusting the prose.
 - **Edit inline, immediately**, the moment you spot a stale or wrong instruction — don't batch fixes for later, and don't just propose them: fix them and note what you changed.
+- **Never write void/negative statements** ("there is no X", "don't look for Y, it doesn't exist") to patch over an agent's past confusion. Every session starts from a clean slate — the agent has no memory of that confusion, so the disclaimer is pure token cost with no reader who needs it. If a stale reference caused the confusion, find and fix or remove that reference instead of adding a warning about it.
+- **Bundled scripts live under the skill's own `scripts/` directory** (`.agents/skills/<name>/scripts/`), never elsewhere. Only bundle a script when the logic is complex, reused often, or needs deterministic reliability — a one-off two-command sequence belongs inline in the body, not as a script.
 - **Keep every file 200–1500 words and under 150 lines**, excluding frontmatter. Below 200 there's usually not enough to justify a separate file; above 1500 words or 150 lines it belongs in a linked reference instead of the main body.
 
 ### AGENTS.md vs. a Skill
