@@ -2,20 +2,15 @@
 
 -
 
-## Linked issue
+## Plan
 
-- Closes #
+- [ ]
 
 ## Testing
 
-<!-- Replace with this repo's quality-gate commands if they differ -->
-- [ ] `pnpm typecheck` (or repo equivalent)
-- [ ] `pnpm lint` (or repo equivalent)
-- [ ] `pnpm test` (or repo equivalent)
-- [ ] Tests added or updated when behavior changed
+<!-- Commands run (this repo's checks from AGENTS.md) and results -->
+-
 
-## Checklist
+## Screenshots
 
-- [ ] Documentation updated when needed
-- [ ] Breaking changes called out explicitly
-- [ ] Screenshots or recordings included for UI changes
+<!-- UI changes only -->
