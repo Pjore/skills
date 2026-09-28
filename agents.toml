@@ -1,41 +1,9 @@
 version = 1
 agents = ["copilot", "pi"]
 
-[[skills]]
-name = "agent-browser"
-source = "path:.agents/skills/agent-browser"
-
-[[skills]]
-name = "agent-tools"
-source = "path:.agents/skills/agent-tools"
-
-[[skills]]
-name = "branch-and-pr"
-source = "path:.agents/skills/branch-and-pr"
-
-[[skills]]
-name = "clean-architecture-dry"
-source = "path:.agents/skills/clean-architecture-dry"
-
-[[skills]]
-name = "coder-github-auth"
-source = "path:.agents/skills/coder-github-auth"
-
-[[skills]]
-name = "commit-work"
-source = "path:.agents/skills/commit-work"
-
-[[skills]]
-name = "credential-security"
-source = "path:.agents/skills/credential-security"
-
-[[skills]]
-name = "frontend-design"
-source = "path:.agents/skills/frontend-design"
-
-[[skills]]
-name = "pi-harness"
-source = "path:.agents/skills/pi-harness"
+# This repo's own 9 skills need no [[skills]] entry: they already live at
+# .agents/skills/<name>, which is where copilot/pi discover skills natively.
+# Only external dependencies need declaring here.
 
 [[skills]]
 name = "dotagents"
