@@ -10,11 +10,11 @@ allowed-tools: Bash(npx agent-browser:*), Bash(agent-browser:*)
 
 ```bash
 npm install -g agent-browser
-agent-browser install --with-deps   # Download Chromium + system deps
-agent-browser --version
+agent-browser install --with-deps   # x86_64: download Chrome + system deps
+agent-browser doctor                # verify install; shows which Chrome it found
 ```
 
-> See [references/installation.md](references/installation.md) for ARM64 setup and configuration.
+On ARM64 Linux, `agent-browser install` has no Chrome build — see [references/installation.md](references/installation.md#arm64-linux).
 
 ## Core Workflow
 
@@ -39,20 +39,11 @@ agent-browser snapshot -i  # Check result
 
 ## Command Chaining
 
-Commands can be chained with `&&` in a single shell invocation. The browser persists between commands via a background daemon, so chaining is safe and more efficient than separate calls.
+The browser persists between commands via a background daemon, so `&&`-chaining is safe. Chain when you don't need an intermediate command's output (open + wait + screenshot); run separately when you must read output first (snapshot → refs → interact).
 
 ```bash
-# Chain open + wait + snapshot in one call
-agent-browser open https://example.com && agent-browser wait --load networkidle && agent-browser snapshot -i
-
-# Chain multiple interactions
-agent-browser fill @e1 "user@example.com" && agent-browser fill @e2 "password123" && agent-browser click @e3
-
-# Navigate and capture
 agent-browser open https://example.com && agent-browser wait --load networkidle && agent-browser screenshot page.png
 ```
-
-**When to chain:** Use `&&` when you don't need to read the output of an intermediate command before proceeding (e.g., open + wait + screenshot). Run commands separately when you need to parse the output first (e.g., snapshot to discover refs, then interact using those refs).
 
 ## Essential Commands
 
@@ -76,10 +67,8 @@ agent-browser check @e1               # Check checkbox
 agent-browser press Enter             # Press key
 agent-browser keyboard type "text"    # Type at current focus (no selector)
 agent-browser keyboard inserttext "text"  # Insert without key events
-agent-browser scroll down 500         # Scroll page (amount must be > 0)
+agent-browser scroll down 500         # Scroll page (amount must be > 0; top: eval 'window.scrollTo(0,0)')
 agent-browser scroll down 500 --selector "div.content"  # Scroll within a specific container
-# NOTE: `scroll down 0` fails with "Number must be greater than 0".
-# To scroll to the top, use: agent-browser eval 'window.scrollTo(0,0)'
 
 # Get information
 agent-browser get text @e1            # Get element text
@@ -103,140 +92,35 @@ agent-browser screenshot file.png     # Screenshot to specific path
 agent-browser screenshot --full       # Full page screenshot
 agent-browser screenshot --annotate   # Annotated screenshot with numbered element labels
 agent-browser pdf output.pdf          # Save as PDF
-# TIP: If the target path is very long or contains shell variables that may not
-# expand cleanly, screenshot to /tmp/ first, then cp to the final destination.
+# Long or variable-laden target paths: screenshot to /tmp/ first, then cp.
 
 # Diff (compare page states)
-agent-browser diff snapshot                          # Compare current vs last snapshot
-agent-browser diff snapshot --baseline before.txt    # Compare current vs saved file
+agent-browser diff snapshot                          # Current vs last snapshot (--baseline <file> for a saved one)
 agent-browser diff screenshot --baseline before.png  # Visual pixel diff
-agent-browser diff url <url1> <url2>                 # Compare two pages
-agent-browser diff url <url1> <url2> --wait-until networkidle  # Custom wait strategy
-agent-browser diff url <url1> <url2> --selector "#main"  # Scope to element
+agent-browser diff url <url1> <url2>                 # Compare two pages (--selector, --wait-until)
 ```
 
-## Common Patterns
-
-### Form Submission
-
-```bash
-agent-browser open https://example.com/signup
-agent-browser snapshot -i
-agent-browser fill @e1 "Jane Doe"
-agent-browser fill @e2 "jane@example.com"
-agent-browser select @e3 "California"
-agent-browser check @e4
-agent-browser click @e5  # Submit
-agent-browser wait --load networkidle
-agent-browser snapshot -i  # Verify result
-```
-
-### Login Flow
-
-```bash
-agent-browser open https://app.example.com/login
-agent-browser snapshot -i
-agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
-agent-browser click @e3
-agent-browser wait --url "**/dashboard"
-agent-browser state save ./auth-state.json  # Save for reuse
-```
-
-### Data Extraction
-
-```bash
-agent-browser open https://example.com/products
-agent-browser wait --load networkidle
-agent-browser get text body > products.txt
-agent-browser screenshot products.png
-agent-browser close
-```
-
-### Visual Verification (Before/After)
-
-```bash
-# Before changes
-agent-browser open http://localhost:3000 && agent-browser wait --load networkidle
-agent-browser screenshot before.png && agent-browser close
-
-# After changes
-agent-browser open http://localhost:3000 && agent-browser wait --load networkidle
-agent-browser diff screenshot --baseline before.png
-agent-browser close
-```
+Save login state for reuse: `agent-browser state save ./auth-state.json` (see [references/authentication.md](references/authentication.md)).
 
 ## Ref Invalidation — Critical Rule
 
-Refs (`@e1`, `@e2`, etc.) are invalidated when the page changes. Always re-snapshot after:
-
-- Clicking links or buttons that navigate
-- Form submissions
-- Dynamic content loading (dropdowns, modals)
-
-```bash
-agent-browser click @e5              # Navigates to new page
-agent-browser snapshot -i            # MUST re-snapshot
-agent-browser click @e1              # Use new refs
-```
+Refs (`@e1`, …) are invalidated when the page changes. Re-run `snapshot -i` after any navigation, form submission, or dynamic content load (dropdowns, modals) before using a ref again.
 
 ## Annotated Screenshots (Vision Mode)
 
-Use `--annotate` to take a screenshot with numbered labels overlaid on interactive elements. Each label `[N]` maps to ref `@eN`. This also caches refs, so you can interact with elements immediately without a separate snapshot.
+`agent-browser screenshot --annotate` overlays numbered labels on interactive elements and prints a legend (`[2] @e2 link "Home"`); the refs are cached, so `click @e2` works without a separate snapshot. Use it for icon-only buttons, canvas/charts, layout checks, or spatial reasoning.
+
+## Semantic Locators and eval
+
+When refs are unreliable, use `agent-browser find text|label|role|placeholder|testid …` (see [references/commands.md](references/commands.md#semantic-locators-alternative-to-refs)).
+
+For `eval`, single-quote simple one-liners (`agent-browser eval 'document.title'`). For nested quotes, arrow functions, or multiline JS use a heredoc, which avoids shell-quoting corruption:
 
 ```bash
-agent-browser screenshot --annotate
-# Output includes the image path and a legend:
-#   [1] @e1 button "Submit"
-#   [2] @e2 link "Home"
-#   [3] @e3 textbox "Email"
-agent-browser click @e2              # Click using ref from annotated screenshot
-```
-
-Use annotated screenshots when:
-- The page has unlabeled icon buttons or visual-only elements
-- You need to verify visual layout or styling
-- Canvas or chart elements are present (invisible to text snapshots)
-- You need spatial reasoning about element positions
-
-## Semantic Locators (Alternative to Refs)
-
-When refs are unavailable or unreliable, use semantic locators:
-
-```bash
-agent-browser find text "Sign In" click
-agent-browser find label "Email" fill "user@test.com"
-agent-browser find role button click --name "Submit"
-agent-browser find placeholder "Search" type "query"
-agent-browser find testid "submit-btn" click
-```
-
-## JavaScript Evaluation (eval)
-
-Use `eval` to run JavaScript in the browser context. **Shell quoting can corrupt complex expressions** -- use `--stdin` or `-b` to avoid issues.
-
-```bash
-# Simple expressions work with regular quoting
-agent-browser eval 'document.title'
-agent-browser eval 'document.querySelectorAll("img").length'
-
-# Complex JS: use --stdin with heredoc (RECOMMENDED)
 agent-browser eval --stdin <<'EVALEOF'
-JSON.stringify(
-  Array.from(document.querySelectorAll("img"))
-    .filter(i => !i.alt)
-    .map(i => ({ src: i.src.split("/").pop(), width: i.width }))
-)
+JSON.stringify([...document.querySelectorAll("a")].map(a => a.href))
 EVALEOF
-
-# Alternative: base64 encoding (avoids all shell escaping issues)
-agent-browser eval -b "$(echo -n 'Array.from(document.querySelectorAll("a")).map(a => a.href)' | base64)"
 ```
-
-**Rules of thumb:**
-- Single-line, no nested quotes -> regular `eval 'expression'` with single quotes is fine
-- Nested quotes, arrow functions, template literals, or multiline -> use `eval --stdin <<'EVALEOF'`
-- Programmatic/generated scripts -> use `eval -b` with base64
 
 > **Configuration:** See [references/installation.md](references/installation.md#configuration-file) for `agent-browser.json` setup and option reference.
 
@@ -249,12 +133,9 @@ agent-browser eval -b "$(echo -n 'Array.from(document.querySelectorAll("a")).map
 | [references/session-management.md](references/session-management.md) | Parallel sessions, state persistence, concurrent scraping |
 | [references/authentication.md](references/authentication.md) | Login flows, OAuth, 2FA handling, state reuse |
 | [references/video-recording.md](references/video-recording.md) | Recording workflows for debugging and documentation |
-| [references/profiling.md](references/profiling.md) | Chrome DevTools profiling for performance analysis |
 | [references/proxy-support.md](references/proxy-support.md) | Proxy configuration, geo-testing, rotating proxies |
 | [references/installation.md](references/installation.md) | Installation, ARM64 setup, configuration file reference |
 | [references/vscode-fallback.md](references/vscode-fallback.md) | VS Code browser tools fallback, pre-flight check, context corruption |
-| [references/arm64-setup.md](references/arm64-setup.md) | ARM64 setup using Playwright Chromium (e.g. Coder workspaces) |
-| [references/remote-host-cdp-attach.md](references/remote-host-cdp-attach.md) | **Operator-driven browser on a remote host** — CDP attach so the human drives a local Chrome while the agent captures it |
 | [references/testing-patterns.md](references/testing-patterns.md) | Frontend testing recipes — pointer-based drag-and-drop, noise filtering, visual regression |
 | [references/browser-tool-comparison.md](references/browser-tool-comparison.md) | When to use `agent-browser` vs. the built-in browser tool, with a full capability comparison |
 
@@ -266,11 +147,7 @@ agent-browser eval -b "$(echo -n 'Array.from(document.querySelectorAll("a")).map
 | [templates/authenticated-session.sh](templates/authenticated-session.sh) | Login once, reuse state |
 | [templates/capture-workflow.sh](templates/capture-workflow.sh) | Content extraction with screenshots |
 
-```bash
-./templates/form-automation.sh https://example.com/form
-./templates/authenticated-session.sh https://app.example.com/login
-./templates/capture-workflow.sh https://example.com ./output
-```
+Run them from the skill directory, e.g. `./templates/form-automation.sh https://example.com/form`.
 
 ## Fallback: VS Code Browser Tools
 
