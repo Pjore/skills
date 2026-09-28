@@ -52,6 +52,8 @@ description: What it does and when to use it.
 
 **Maintain:** Keep the body 200–1500 words and under 150 lines; move detail to `references/`. Update `description` when scope changes. See [references/SKILL-FORMAT.md](references/SKILL-FORMAT.md) for writing the `description`, body conventions, and anti-patterns to catch when auditing.
 
+**Don't register in-place skills in `agents.toml`.** A skill already committed at `.agents/skills/<name>/SKILL.md` needs no `[[skills]]` `path:` entry — copilot/pi discover it natively at that path regardless, and dotagents' per-tool symlink (Claude, Cursor) is driven by the `agents` array, not by which skills are declared. Only declare a skill in `agents.toml` when its source is *external* (a different repo) and needs fetching/pinning.
+
 ---
 
 ## Writing either well
