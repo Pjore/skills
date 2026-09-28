@@ -4,23 +4,19 @@ Public library of reusable Agent Skills (`SKILL.md`). See [README.md](README.md)
 
 ## Working in this repo
 
-Skills live at `.agents/skills/<name>/SKILL.md` and are edited directly — no build step.
+Skills live at `.agents/skills/<name>/SKILL.md` and are edited directly — no build step. Follow the `agent-tools` skill for format and size rules.
 
-`agents.toml` only declares this repo's *external* dependencies (`dotagents`, `grilling`, `domain-modeling`). The skills this repo publishes need no `[[skills]]` entry: they already sit at their canonical path, which copilot/pi discover natively.
-
-Refresh managed skills before starting work:
+`agents.toml` declares only external dependencies; skills published from this repo need no `[[skills]]` entry. Refresh managed skills before starting work:
 
 ```bash
-npx @sentry/dotagents@latest --project install
+npx @sentry/dotagents@latest --project install   # not the unrelated npm package `dotagents`
 ```
-
-(the npm package is `@sentry/dotagents`; an unrelated package literally named `dotagents` also exists — don't use it.)
 
 ## Adding or editing a skill
 
-1. Add/edit `.agents/skills/<name>/SKILL.md` (see the `agent-tools` skill here for `SKILL.md` format rules).
-2. Add a row to the table in `README.md`.
-3. Do **not** add a `[[skills]]` entry to `agents.toml` for it.
+1. Add/edit `.agents/skills/<name>/SKILL.md`.
+2. Keep its row in the `README.md` table in sync.
+3. Skills are consumed by other repos: keep them generic — reference the consuming repo's AGENTS.md for project commands instead of hardcoding them.
 
 ## Conventions
 
