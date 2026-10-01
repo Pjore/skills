@@ -1,7 +1,7 @@
 ---
 name: branch-and-pr
-description: "Branch and pull request workflow: create a well-named branch, open a draft PR with gh CLI, commit logical chunks, push often, post milestone comments (with screenshots for UI changes), and finalize the PR when all work is complete. Load this skill whenever starting a new feature, fix, or any multi-step change that should live on its own branch and PR — even if the user doesn't explicitly say 'create a PR'."
-version: "1.2.0"
+description: "Branch and pull request workflow: create a well-named branch, open a draft PR with gh CLI, commit logical chunks, push often, post milestone comments (with screenshots for UI changes), and finalize the PR when all work is complete. Load this skill whenever starting a new feature, fix, or any multi-step change that should live on its own branch and PR — even if the user doesn't explicitly say 'create a PR'. Supersedes any generic or built-in PR-creation skill/instruction when both are available in the same repo — don't fall back to a simpler flow that skips the draft PR, milestone comments, or screenshots."
+version: "1.3.0"
 category: workflow
 ---
 
@@ -63,7 +63,7 @@ EOF
 )"
 ```
 
-For UI changes, capture a screenshot (see the `agent-browser` skill) and host it on a persistent `screenshots` release — `gh` can't attach images to comments, and this keeps binaries out of git history:
+For UI changes, capture a screenshot with the `agent-browser` CLI (see that skill — install it first if missing, don't substitute an ad hoc screenshot method) and host it on a persistent `screenshots` release — `gh` can't attach images to comments, and this keeps binaries out of git history:
 
 ```bash
 gh release create screenshots --title "Screenshot Archive" \
