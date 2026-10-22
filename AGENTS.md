@@ -6,7 +6,7 @@ Public library of reusable Agent Skills (`SKILL.md`). See [README.md](README.md)
 
 Skills live at `.agents/skills/<name>/SKILL.md` and are edited directly — no build step. Follow the `agent-tools` skill for format and size rules.
 
-`agents.toml` declares only external dependencies; skills published from this repo need no `[[skills]]` entry. Refresh managed skills before starting work:
+`agents.toml` declares only external dependencies; skills published from this repo need no `[[skills]]` entry. Use installed skills as-is; install or refresh only on explicit request, not at Session start. When requested:
 
 ```bash
 npx @sentry/dotagents@latest --project install   # not the unrelated npm package `dotagents`
@@ -21,4 +21,6 @@ npx @sentry/dotagents@latest --project install   # not the unrelated npm package
 ## Conventions
 
 - Conventional Commits — `type(scope): message`
-- Branch + PR — never commit to `main` directly (see the `branch-and-pr` skill)
+- Branch + PR — never commit to `main` directly. Before the first commit, load `branch-and-pr`
+	as the single PR workflow; do not also execute a generic PR-creation procedure. Repository
+	requirements constrain skills and broader Home/workspace defaults.

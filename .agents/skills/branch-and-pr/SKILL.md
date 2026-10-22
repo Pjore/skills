@@ -1,11 +1,40 @@
 ---
 name: branch-and-pr
-description: "Branch and pull request workflow: create a well-named branch, open a draft PR with gh CLI, commit logical chunks, push often, post milestone comments (with screenshots for UI changes), and finalize the PR when all work is complete. Load this skill whenever starting a new feature, fix, or any multi-step change that should live on its own branch and PR — even if the user doesn't explicitly say 'create a PR'. Supersedes any generic or built-in PR-creation skill/instruction when both are available in the same repo — don't fall back to a simpler flow that skips the draft PR, milestone comments, or screenshots."
-version: "1.3.0"
+description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
+version: "1.4.0"
 category: workflow
 ---
 
 # Branch and PR Workflow
+
+## 0. Resolve guidance and choose a path
+
+Read applicable Home/workspace instructions, then the target repository's root and nested
+`AGENTS.md`. Use the repository-selected PR workflow before the first commit; if it selects
+this skill, use this procedure alone, not a second generic PR flow. Repository requirements
+constrain broader defaults and every path below. Use installed skills; dotagents installation
+or refresh is on explicit request only. Report a missing required skill instead of installing it.
+
+Classify the actual diff, not file extensions:
+
+- **Documentation-only:** solely non-executable prose, such as plans or glossary updates.
+- **Implementation:** code, configuration, dependencies, generated/runtime inputs, executable
+  examples, behavioral agent instructions (`AGENTS.md`, `SKILL.md`, prompts or operational
+  references), mixed changes, or uncertainty about runtime effects.
+
+For documentation-only changes, use step 1, the branch naming in step 2, step 3, then the
+documentation-only path below. Otherwise follow steps 1–6. Reclassify if scope grows.
+
+## Documentation-only path
+
+- Review the complete diff and local links; run `git diff --check`, applicable documentation
+  lint, and any checks explicitly required by repository guidance. Do not install application
+  dependencies, run runtime suites, or reproduce unrelated baseline failures merely for prose.
+- Prefer one scoped commit when appropriate; stage only intended files through `commit-work`.
+- Push and open a ready PR with Summary and Testing (commands, results, and why runtime checks
+  are inapplicable). No mandatory draft, milestone comments, or repeated body rewrites. Reuse
+  an existing PR without resetting its review state; mark a draft ready only when complete.
+- Required CI, reviews and branch protections still apply. Merge only through step 6.
 
 ## 1. Reuse or create
 
@@ -46,7 +75,7 @@ The title is a Conventional Commit subject. Keep the PR URL for comments. [templ
 
 ## 3. Commit and push
 
-Follow the `commit-work` skill for every commit: one concern per commit, Conventional Commits, the repo's checks (from its AGENTS.md) passing first. Push after every commit or small cluster of commits.
+Follow the `commit-work` skill for every commit: one concern per commit, Conventional Commits, explicit staging, and the chosen path's checks plus repository-required checks passing first. Push after every commit or small cluster of commits.
 
 ## 4. Milestone comments
 
@@ -77,13 +106,18 @@ Embed it in the comment as `![<description>](https://github.com/<OWNER>/<REPO>/r
 
 When every planned milestone is done:
 
-1. Run the repo's full check suite and fix any failure.
+1. Run the repo's full check suite. Fix failures caused by this change; report unrelated failures as blockers rather than repairing or repeatedly reproducing them. Leave the PR draft while required checks remain unresolved.
 2. Rewrite the body with `gh pr edit <PR> --body …`: final Summary, ticked Plan, Testing (commands and results), and Screenshots for UI changes.
 3. `gh pr ready <PR>`
 
 ## 6. Merge — only when the user asks
 
+Record the PR number and reviewed head SHA; inspect required checks and review requirements.
+Do not bypass protections or treat unknown checks as passing. Merge the reviewed SHA, then
+verify the PR reports `MERGED`. Keep worktree cleanup separate; do not disturb another checkout.
+
 ```bash
-gh pr merge <PR> --squash --delete-branch   # deletes local + remote branch, checks out main
-git pull
+gh pr checks <PR> --required
+gh pr merge <PR> --squash --match-head-commit <reviewed-head-sha>
+gh pr view <PR> --json state,mergeCommit
 ```

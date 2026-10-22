@@ -21,7 +21,7 @@ Any agent tool that reads `.agents/skills/` (Claude Code, Cursor, Codex, GitHub 
 |---|---|
 | [agent-browser](.agents/skills/agent-browser/SKILL.md) | Browser automation CLI for AI agents — navigate, fill forms, click, screenshot, scrape, test web apps. |
 | [agent-tools](.agents/skills/agent-tools/SKILL.md) | Reference guide for the four agent configuration primitives: `AGENTS.md`, `.agents/skills`, `.github/agents`, `.github/hooks`. |
-| [branch-and-pr](.agents/skills/branch-and-pr/SKILL.md) | Branch + draft PR workflow: well-named branches, logical commits, milestone PR comments, finalize when done. |
+| [branch-and-pr](.agents/skills/branch-and-pr/SKILL.md) | Repository-selected PR workflow: documentation-only fast path; draft PRs and milestone comments for implementation work. |
 | [clean-architecture-dry](.agents/skills/clean-architecture-dry/SKILL.md) | Clean Architecture and DRY principles for module boundaries, service/repository abstractions, and duplication review. |
 | [coder-github-auth](.agents/skills/coder-github-auth/SKILL.md) | GitHub CLI/git auth inside Coder workspaces via `ghtoken-refresh` — fixes `Bad credentials` / HTTP 401. |
 | [commit-work](.agents/skills/commit-work/SKILL.md) | High-quality git commits: staging, splitting logical chunks, Conventional Commit messages. |
