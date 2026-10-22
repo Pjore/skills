@@ -15,17 +15,27 @@ Prefer the global `agent-browser` binary over `npx agent-browser` (faster startu
 `agent-browser install` has no Linux ARM64 Chrome build. Use any other Chromium:
 
 - **Debian/Ubuntu `chromium` package** (`/usr/bin/chromium`) — auto-detected, no config needed.
-- **Playwright Chromium** — point agent-browser at it:
+- **Playwright Chromium** — point agent-browser at it. `--with-deps` installs the system shared
+  libraries (`libnspr4`, `libnss3`, `libatk*`, `libgbm1`, `libasound2`/`libasound2t64`, ...) via
+  `sudo apt-get`, without which Chrome exits with `error while loading shared libraries`:
 
   ```bash
   npx playwright install chromium --with-deps
-  CHROME=$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux/chrome | tail -1)
+  CHROME=$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux*/chrome | tail -1)
   mkdir -p ~/.agent-browser && echo "{\"executablePath\": \"$CHROME\"}" > ~/.agent-browser/config.json
+  agent-browser close   # restart the daemon so it picks up the new executablePath
   ```
+
+  The cache directory is `chrome-linux-arm64` on ARM64 (not `chrome-linux` — that's the x86_64
+  name), hence the glob above. If `--with-deps` can't use `sudo` (no passwordless access),
+  install the listed packages manually first, then rerun without `--with-deps`.
 
   Or per invocation: `--executable-path <path>` / `AGENT_BROWSER_EXECUTABLE_PATH`.
 
-Run `agent-browser doctor` to confirm which binary is picked up.
+Run `agent-browser doctor` to confirm which binary is picked up. Note: `doctor`'s own launch test
+only checks its standard cache locations and ignores `--executable-path`/config — a passing
+`agent-browser open <url>` is the real signal that a configured custom path works, even if
+`doctor` still reports the launch test as failed.
 
 ## Configuration File
 
