@@ -1,13 +1,18 @@
 ---
 name: branch-and-pr
 description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
-version: "1.4.0"
+version: "1.5.0"
 category: workflow
 ---
 
 # Branch and PR Workflow
 
 ## 0. Resolve guidance and choose a path
+
+Resolve the target first: an explicit PR URL or Task repository outranks editor context,
+terminal CWD, and previous work. Confirm the checkout's remote and inspect `git worktree list`;
+reuse the requested PR's branch/worktree. Use explicit `--repo OWNER/REPO` for GitHub commands
+until the checkout is confirmed. Do not create a fresh feature branch for an existing PR.
 
 Read applicable Home/workspace instructions, then the target repository's root and nested
 `AGENTS.md`. Use the repository-selected PR workflow before the first commit; if it selects
@@ -24,6 +29,19 @@ Classify the actual diff, not file extensions:
 
 For documentation-only changes, use step 1, the branch naming in step 2, step 3, then the
 documentation-only path below. Otherwise follow steps 1–6. Reclassify if scope grows.
+
+Choose verification by risk, not a mandatory full local suite:
+
+| Diff | Local verification | Before merge |
+|------|--------------------|--------------|
+| Version-only conflict | Diff, package syntax and version | Applicable package CI |
+| Local behavior or behavioral instructions | Focused tests and relevant build/lint | Applicable required CI |
+| Shared contracts, dependencies, runtime or CI | Affected integration suites and builds | Full affected CI |
+
+Repository-required local checks override this table. Reuse prior results only for unchanged
+inputs. Do not duplicate full local and CI suites without a concrete risk or unavailable CI.
+Inspect documented prerequisites before installing dependencies; never treat setup failures
+as known baseline failures without evidence. After each change, run the smallest useful check.
 
 ## Documentation-only path
 
@@ -79,7 +97,8 @@ Follow the `commit-work` skill for every commit: one concern per commit, Convent
 
 ## 4. Milestone comments
 
-After each milestone:
+After a meaningful milestone requiring a reviewer update; do not post intermediate comments
+or repeatedly rewrite the body for a small, single-step change:
 
 ```bash
 gh pr comment <PR> --body "$(cat <<'EOF'
@@ -106,7 +125,7 @@ Embed it in the comment as `![<description>](https://github.com/<OWNER>/<REPO>/r
 
 When every planned milestone is done:
 
-1. Run the repo's full check suite. Fix failures caused by this change; report unrelated failures as blockers rather than repairing or repeatedly reproducing them. Leave the PR draft while required checks remain unresolved.
+1. Run the selected verification and repository-required checks. Fix failures caused by this change; report unrelated blockers without repeatedly reproducing them. Do not rerun an equivalent full suite solely because this is finalization. Leave the PR draft while required checks remain unresolved.
 2. Rewrite the body with `gh pr edit <PR> --body …`: final Summary, ticked Plan, Testing (commands and results), and Screenshots for UI changes.
 3. `gh pr ready <PR>`
 
@@ -115,6 +134,9 @@ When every planned milestone is done:
 Record the PR number and reviewed head SHA; inspect required checks and review requirements.
 Do not bypass protections or treat unknown checks as passing. Merge the reviewed SHA, then
 verify the PR reports `MERGED`. Keep worktree cleanup separate; do not disturb another checkout.
+Use noninteractive CI output and at most one watcher; summarize failures and totals rather than
+feeding full logs into context. When piping checks, preserve their exit codes. Existing green
+checks must cover the reviewed head; use an up-to-date base or merge queue when required.
 
 ```bash
 gh pr checks <PR> --required
