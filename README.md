@@ -26,6 +26,7 @@ Any agent tool that reads `.agents/skills/` (Claude Code, Cursor, Codex, GitHub 
 | [coder-github-auth](.agents/skills/coder-github-auth/SKILL.md) | GitHub CLI/git auth inside Coder workspaces via `ghtoken-refresh` — fixes `Bad credentials` / HTTP 401. |
 | [commit-work](.agents/skills/commit-work/SKILL.md) | High-quality git commits: staging, splitting logical chunks, Conventional Commit messages. |
 | [credential-security](.agents/skills/credential-security/SKILL.md) | Enforce secure handling of gitignored `.env` credentials — never read directly, always redact. |
+| [document-generation](.agents/skills/document-generation/SKILL.md) | Generate and validate DOCX, PDF, and spreadsheet documents with formatting-conscious helpers. |
 | [frontend-design](.agents/skills/frontend-design/SKILL.md) | Distinctive, production-grade frontend UI generation that avoids generic AI aesthetics. Sourced from [anthropics/skills](https://github.com/anthropics/skills), retains its original Apache-2.0 license (see `LICENSE.txt` in that skill's directory). |
 | [pi-harness](.agents/skills/pi-harness/SKILL.md) | Operate and troubleshoot the Agent Pi harness in Coder workspaces (tmux session, provider config, `/login`). |
 

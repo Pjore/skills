@@ -1,0 +1,7 @@
+#set page(paper: "a4", margin: 25.4mm)
+#set text(font: "$mainfont$", size: 10pt, lang: "en")
+#set par(leading: 0.35em, spacing: 6pt, first-line-indent: 0pt)
+#set heading(numbering: none)
+#show heading.where(level: 1): set text(size: 14pt)
+#show heading.where(level: 2): set text(size: 11pt)
+$body$
