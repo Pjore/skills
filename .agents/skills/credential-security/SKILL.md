@@ -55,13 +55,10 @@ source .agents/skills/credential-security/scripts/load-credentials.sh
 
 This replaces every occurrence of each variable's value with `[REDACTED:<VARNAME>]`, in place, without ever echoing the secret. Binary files (screenshots) are out of scope — avoid capturing the screen during credential-entry steps instead.
 
-To wire this in automatically as a `PostToolUse` hook, declare it in `agents.toml`:
-
-```toml
-[[hooks]]
-event = "PostToolUse"
-command = ".agents/skills/credential-security/scripts/redact-filter.sh"
-```
+Run file redaction explicitly with the captured file path and credential variable
+names before sharing the file. This script is not an agent lifecycle hook:
+`PostToolUse` cannot replace a tool result already delivered to the agent.
+Avoid commands that expose credentials in their output in the first place.
 
 ## Verification (Safe)
 
