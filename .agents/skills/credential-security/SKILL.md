@@ -1,6 +1,6 @@
 ---
 name: credential-security
-description: "Enforce secure credential handling for any repo with a gitignored .env file. AI agents must NEVER read .env directly — only source it via load-credentials.sh, and must redact secret values from any captured output. Use when writing scripts, running commands that need API keys, or handling secrets of any kind."
+description: "Enforce secure credential handling for any repo with a gitignored .env file. AI agents must NEVER read .env directly — only source it via load-credentials.sh, and never expose secret values in output or files. Use when writing scripts, running commands that need API keys, or handling secrets of any kind."
 ---
 
 # Credential Security
@@ -42,25 +42,6 @@ Every script that needs credentials must:
 set -euo pipefail
 source "$(dirname "$0")/load-credentials.sh"
 # ... use $VAR_NAME from environment
-```
-
-## Redacting Captured Output
-
-Any tool output, log, or file that may have passed through a page/response containing secrets (browser automation, network logs, screenshots of forms) must be redacted before it's persisted or shown. Use [scripts/redact-filter.sh](scripts/redact-filter.sh):
-
-```bash
-source .agents/skills/credential-security/scripts/load-credentials.sh
-.agents/skills/credential-security/scripts/redact-filter.sh <file> VAR1 VAR2
-```
-
-This replaces every occurrence of each variable's value with `[REDACTED:<VARNAME>]`, in place, without ever echoing the secret. Binary files (screenshots) are out of scope — avoid capturing the screen during credential-entry steps instead.
-
-To wire this in automatically as a `PostToolUse` hook, declare it in `agents.toml`:
-
-```toml
-[[hooks]]
-event = "PostToolUse"
-command = ".agents/skills/credential-security/scripts/redact-filter.sh"
 ```
 
 ## Verification (Safe)
