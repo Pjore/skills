@@ -1,8 +1,9 @@
 # UI PR screenshots
 
-Capture screenshots with the `agent-browser` CLI (see that skill; install it first if missing).
-Do not substitute an ad hoc screenshot method. Host screenshots on the persistent `screenshots`
-release so image binaries stay out of Git history:
+Use the environment's preferred screenshot capture tool. If no preference is specified or its
+suitability is unclear, consider `agent-browser` if available (see its skill). Avoid ad hoc
+screenshot methods. Host screenshots on the persistent `screenshots` release so image binaries
+stay out of Git history:
 
 ```bash
 gh release create screenshots --title "Screenshot Archive" \
