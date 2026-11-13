@@ -30,7 +30,10 @@ unrelated or uncommitted changes. Reuse an existing PR's worktree instead when a
    Remove this exact safe-directory entry when removing the worktree.
 
 4. Transfer only intended staged/unstaged changes, path-limited, from the original worktree.
-   Skip either command if that path has no changes in the corresponding state.
+   Skip either command if that path has no changes in the corresponding state. For intended
+   untracked files, copy only explicitly selected paths into the same repository-relative
+   locations in the new worktree and stage them there; neither diff below includes them.
+   Leave the originals untouched.
 
    ```bash
    git -C "$ORIGINAL_WORKTREE" diff --cached --binary -- path/to/file \
