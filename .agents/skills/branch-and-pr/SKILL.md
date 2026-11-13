@@ -1,7 +1,7 @@
 ---
 name: branch-and-pr
 description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
-version: "1.6.0"
+version: "1.7.0"
 category: workflow
 ---
 
@@ -13,9 +13,9 @@ Resolve the target first: an explicit PR URL or Task repository outranks editor 
 terminal CWD, and previous work. Confirm the checkout remote, active branch, worktrees, and
 any related PR. Use explicit `--repo OWNER/REPO` for GitHub commands until confirmed.
 
-- On `main`, always create a new branch from target base. Otherwise ask whether to use the
-  active branch/PR or create a new branch. State the branch/PR context, wait before acting,
-  and don't infer the choice from task similarity, worktree state, or an existing PR.
+- On `main`, always create a new branch from target base. On non-main, reuse the same change, a
+  direct follow-up, or clearly related work without asking. Otherwise ask whether to reuse the
+  active branch/PR or create a new branch; state context and wait. Honor explicit instructions.
 
 Read applicable Home/workspace instructions, then the target repository's root and nested
 `AGENTS.md`. Use the repository-selected PR workflow before the first commit; if it selects
@@ -63,12 +63,11 @@ git worktree list
 gh pr list --state open --json number,title,headRefName,isDraft --limit 20
 ```
 
-- Follow the branch decision from step 0; never silently reuse a related branch.
-- If the operator chose the active branch, verify the repository and target; update its PR
-  when applicable without switching branches.
-- If the operator chose a new branch, fetch from the target base (default `main`), not
-  active `HEAD`. For dirty or unrelated worktrees, use a sibling worktree from that base,
-  transfer only intended changes, and leave the original untouched.
+- Reuse related branches without asking; verify repo/target and update any PR.
+- For unrelated/unclear work on non-main, ask and wait; if new branch is chosen, fetch target
+  base (default `main`), never active `HEAD`.
+- For dirty/unrelated worktrees, use a sibling from target base, transfer intended changes, and
+  leave the original untouched.
 
 ## 2. Create the branch and draft PR
 
