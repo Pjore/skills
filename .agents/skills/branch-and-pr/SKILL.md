@@ -1,7 +1,7 @@
 ---
 name: branch-and-pr
 description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
-version: "1.5.0"
+version: "1.6.0"
 category: workflow
 ---
 
@@ -10,9 +10,12 @@ category: workflow
 ## 0. Resolve guidance and choose a path
 
 Resolve the target first: an explicit PR URL or Task repository outranks editor context,
-terminal CWD, and previous work. Confirm the checkout's remote and inspect `git worktree list`;
-reuse the requested PR's branch/worktree. Use explicit `--repo OWNER/REPO` for GitHub commands
-until the checkout is confirmed. Do not create a fresh feature branch for an existing PR.
+terminal CWD, and previous work. Confirm the checkout remote, active branch, worktrees, and
+any related PR. Use explicit `--repo OWNER/REPO` for GitHub commands until confirmed.
+
+- On `main`, always create a new branch from target base. Otherwise ask whether to use the
+  active branch/PR or create a new branch. State the branch/PR context, wait before acting,
+  and don't infer the choice from task similarity, worktree state, or an existing PR.
 
 Read applicable Home/workspace instructions, then the target repository's root and nested
 `AGENTS.md`. Use the repository-selected PR workflow before the first commit; if it selects
@@ -45,34 +48,43 @@ as known baseline failures without evidence. After each change, run the smallest
 
 ## Documentation-only path
 
-- Review the complete diff and local links; run `git diff --check`, applicable documentation
-  lint, and any checks explicitly required by repository guidance. Do not install application
-  dependencies, run runtime suites, or reproduce unrelated baseline failures merely for prose.
-- Prefer one scoped commit when appropriate; stage only intended files through `commit-work`.
-- Push and open a ready PR with Summary and Testing (commands, results, and why runtime checks
-  are inapplicable). No mandatory draft, milestone comments, or repeated body rewrites. Reuse
-  an existing PR without resetting its review state; mark a draft ready only when complete.
-- Required CI, reviews and branch protections still apply. Merge only through step 6.
+- Review the full diff and local links; run `git diff --check`, documentation lint, and required
+  checks. For prose, do not install app dependencies or run runtime suites.
+- Stage only intended files through `commit-work`; prefer one scoped commit.
+- Push and open a ready PR with Summary and Testing. Reuse an existing PR without resetting its
+  review state; mark drafts ready only when complete.
+- Required CI, reviews, and branch protections still apply. Merge only through step 6.
 
-## 1. Reuse or create
+## 1. Apply the branch choice
 
 ```bash
 git branch --show-current
+git worktree list
 gh pr list --state open --json number,title,headRefName,isDraft --limit 20
 ```
 
-- **Reuse** an open PR's branch when the new work is in the same feature area or is a direct follow-up (tests for it, a fix to it, an extension still under review): `git checkout <branch> && git pull`. If that branch is checked out in another worktree, `cd` into the worktree instead. If the scope grew, update the PR with `gh pr edit <PR> --title … --body …`. Continue at step 3.
-- **Otherwise create a new branch.** Never commit to `main` — including docs and config tweaks.
+- Follow the branch decision from step 0; never silently reuse a related branch.
+- If the operator chose the active branch, verify the repository and target; update its PR
+  when applicable without switching branches.
+- If the operator chose a new branch, fetch from the target base (default `main`), not
+  active `HEAD`. For dirty or unrelated worktrees, use a sibling worktree from that base,
+  transfer only intended changes, and leave the original untouched.
 
 ## 2. Create the branch and draft PR
 
 Branch name: `<type>/<short-kebab-description>` — `type` is a Conventional Commit type (`feat`, `fix`, `refactor`, `test`, `chore`, `docs`); description lowercase, hyphens only, under ~40 chars (e.g. `fix/meeting-overlap-validation`).
 
+When creating a new branch, branch from the fetched target base, never the active branch:
+
 ```bash
-git checkout -b <type>/<description>
+BASE=main
+BRANCH=docs/short-description
+git fetch origin "$BASE"
+git switch -c "$BRANCH" "origin/$BASE"
 ```
 
-`gh pr create` needs at least one commit ahead of the base branch, so make the first commit (step 3), then:
+`gh pr create` needs at least one commit ahead of the base branch, so make the first
+commit (step 3), then:
 
 ```bash
 git push -u origin <type>/<description>
