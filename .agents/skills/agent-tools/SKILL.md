@@ -1,127 +1,31 @@
 ---
 name: agent-tools
-description: Reference guide for the four agent configuration primitives — AGENTS.md, .agents/skills, .github/agents, and .github/hooks — plus the rules for writing them well. Use when creating, locating, evolving, or auditing any agent configuration file (AGENTS.md, CLAUDE.md, .github/copilot-instructions.md, SKILL.md), or when an agent needs to understand how these tools are defined, triggered, and maintained.
+description: Guide to choosing, authoring, and maintaining agent harness features—AGENTS.md, custom instructions, Agent Skills, custom agents, and hooks. Use when creating, finding, auditing, or consolidating agent configuration across tools.
 ---
 
-# Agent Tools
+# Agent Harness Features
 
-Reference for the four agent configuration primitives, and the rules for writing each well. Both artifacts exist to change agent behavior with as few tokens as possible — everything written here competes for space in the same context window as the code itself, so treat every line as a cost, not a courtesy.
+Choose the smallest supported configuration feature for the behavior you need. Before editing, identify the target agent and check the repository's existing instructions and conventions.
 
----
+## Choose a feature
 
-## AGENTS.md
+| Feature | Use it for | Typical location |
+|---|---|---|
+| Repository instructions | Shared context and rules that apply broadly | `AGENTS.md` |
+| Custom instructions | Tool-specific rules, optionally scoped by file patterns | `.github/instructions/*.instructions.md` |
+| Agent Skills | On-demand workflows and domain knowledge, optionally with resources | `.agents/skills/<name>/SKILL.md` |
+| Custom agents | A selectable or delegated agent with a distinct role and toolset | `.github/agents/<name>.agent.md` |
+| Hooks | Deterministic commands tied to supported agent lifecycle events | `.github/hooks/*.json` |
 
-**Purpose:** Primary AI system prompt for a repository. Replaces `copilot-instructions.md` as the source of truth.
+Use the target tool's documented format and supported locations; feature support and loading behavior vary by tool.
 
-**Paths:**
-- Root `AGENTS.md` — applies to the entire repo
-- Nested `<subdir>/AGENTS.md` — applies to agents scoped to that directory
+## Author and maintain
 
-**Content:** Purpose, tech stack, conventions, commands, security rules.
-
-**Trigger:** Loaded automatically at session start.
-
-**Maintain:** Edit `AGENTS.md` directly. Keep it concise — it is loaded on every session. See [references/AGENTS-FORMAT.md](references/AGENTS-FORMAT.md) for structure, monorepo nesting, and anti-patterns to catch when auditing.
-
----
-
-## `.agents/skills`
-
-**Purpose:** Self-contained knowledge modules that extend agent capabilities for specific domains or workflows.
-
-**Path:** `.agents/skills/<skill-name>/SKILL.md` — follows the [agentskills.io](https://agentskills.io/specification) specification.
-
-**Structure:**
-```
-skill-name/
-├── SKILL.md       # required: frontmatter + instructions
-├── scripts/       # optional: executable scripts
-├── references/    # optional: detailed docs
-└── assets/        # optional: templates, data
-```
-
-**SKILL.md frontmatter:**
-```yaml
----
-name: skill-name          # lowercase, hyphens only, matches directory name
-description: What it does and when to use it.
----
-```
-
-**Trigger:** Agent matches task intent to the `description` field and loads the full skill body.
-
-**Maintain:** Move detail to `references/`. Update `description` when scope changes. See [references/SKILL-FORMAT.md](references/SKILL-FORMAT.md) for writing the `description`, body conventions, and anti-patterns to catch when auditing.
-
-**`agents.toml` declares external skills only** (sourced from another repo). A skill committed at `.agents/skills/<name>/` needs no `[[skills]]` entry — copilot/pi discover it at that path, and dotagents' per-tool symlinks follow the `agents` array.
-
----
-
-## Writing either well
-
-- **Only state what the agent couldn't infer.** Don't explain what a `.gitignore` is or that tests should pass. State the project's specific, non-obvious facts: the actual test command, the actual lint config, the actual branch convention.
-- **Write for the reader, not for humans.** No onboarding tone, no encouragement, no filler transitions. A checklist beats a paragraph.
-- **Keep it current or delete it.** An instruction that lies is worse than no instruction — the agent will follow it and fail. When auditing, verify claims against the repo (run the stated command, check the referenced path exists) rather than trusting the prose.
-- **Edit inline, immediately**, the moment you spot a stale or wrong instruction — don't batch fixes for later, and don't just propose them: fix them and note what you changed.
-- **Describe the current state only.** The reader has no memory of earlier sessions or versions. Cut history ("was moved", "previously", "no longer"), justifications for what isn't there ("not worth a script"), and void statements ("there is no X"). If a stale reference caused confusion, fix or remove that reference instead of warning about it.
-- **One source of truth per fact.** When two files state the same rule, keep it in one and link from the other; a duplicated rule drifts into a contradiction.
-- **Bundled scripts live in the skill's own `scripts/`.** Bundle only complex, reused, or reliability-critical logic; short command sequences go inline.
-- **Keep every file under 1500 words and 150 lines** (excluding frontmatter); smaller is better. Move overflow to a linked reference.
-
-### AGENTS.md vs. a Skill
-
-Put it in **AGENTS.md** when it's always true and cheap to state: build/test commands, directory layout, style conventions, do-not-touch paths. Put it in a **Skill** when it's a situational, multi-step workflow that shouldn't load unless relevant — its `description` is the trigger, its body is only paid for when invoked. If a paragraph in AGENTS.md only matters for one kind of task, it's a Skill candidate, not a permanent cost every turn pays.
-
-### Not the domain glossary
-
-`AGENTS.md`/Skills are operational: commands, workflow, conventions. A project's `CONTEXT.md` (see the `domain-modeling` skill) is purely a vocabulary glossary with zero implementation detail. Never let domain terminology leak into AGENTS.md, and never let build commands leak into CONTEXT.md.
-
-### Legacy formats
-
-`CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md` are vendor-specific predecessors of the same idea. Prefer `AGENTS.md` for new projects; when one of these already exists, apply the same rules to it rather than forking content across files.
-
----
-
-## `.github/agents`
-
-**Purpose:** Custom agent mode definitions — distinct persona, toolset, and constraints for a specialized agent.
-
-**Path:** `.github/agents/<name>.agent.md`
-
-**Format:**
-```yaml
----
-name: "Agent Name"
-description: "When to invoke this agent."
-tools: ["read", "edit/editFiles", "execute"]
-model: Claude Opus 4.7 (copilot)
----
-```
-Body: purpose, constraints, step-by-step behavior.
-
-**Trigger:** User selects the agent mode, or a parent agent delegates to a sub-agent by name.
-
-**Maintain:** Update `tools` when capabilities change and the body when the process changes. Keep `description` accurate for discoverability.
-
----
-
-## `.github/hooks`
-
-**Purpose:** Deterministic shell commands that run automatically at agent lifecycle events — outside the LLM, always reliable.
-
-**Path:** `.github/hooks/<name>.json`
-
-**Format:**
-```json
-{
-  "version": 1,
-  "hooks": {
-    "postToolUse": [{ "type": "command", "bash": "npx prettier --write .", "timeoutSec": 30 }]
-  }
-}
-```
-
-**Key events:** `sessionStart`, `preToolUse`, `postToolUse`, `agentStop`, `userPromptSubmitted`, `sessionEnd`
-
-**Trigger:** Fires automatically at the matching lifecycle event. Non-zero exit blocks the action.
-
-**Maintain:** Test scripts manually before committing. Keep hooks fast. Bundle scripts next to `hooks.json`.
+- Keep always-relevant, project-specific facts concise in repository instructions. Put task-specific procedures in a Skill, and deterministic automation in a hook.
+- Use custom instructions when a tool needs instructions scoped to files or folders. Don't copy a shared rule into multiple instruction files.
+- Make Skills discoverable with a description that says what the skill does and when to load it. Keep detailed references in its folder and validate against the [Agent Skills specification](https://agentskills.io/specification). See [references/SKILL-FORMAT.md](references/SKILL-FORMAT.md).
+- Keep `AGENTS.md` accurate, scoped, and free of onboarding filler. See [references/AGENTS-FORMAT.md](references/AGENTS-FORMAT.md).
+- Keep custom-agent descriptions and tool permissions aligned with their actual role and supported schema.
+- Keep hooks small, bounded, and safe to rerun. Verify event names and failure behavior against the target tool's documentation, then test the command independently.
+- Prefer one source of truth per rule. When auditing, verify file paths, commands, schemas, and tool support instead of trusting stale prose.
+- For dotagents-managed dependencies, update `agents.toml` and use dotagents to install or refresh them; don't edit generated lockfiles or managed copies directly.
