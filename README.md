@@ -28,6 +28,7 @@ Any agent tool that reads `.agents/skills/` (Claude Code, Cursor, Codex, GitHub 
 | [credential-security](.agents/skills/credential-security/SKILL.md) | Enforce secure handling of gitignored `.env` credentials — source through the loader and never expose secret values. |
 | [document-generation](.agents/skills/document-generation/SKILL.md) | Generate and validate DOCX, PDF, and spreadsheet documents with formatting-conscious helpers. |
 | [frontend-design](.agents/skills/frontend-design/SKILL.md) | Distinctive, production-grade frontend UI generation that avoids generic AI aesthetics. Sourced from [anthropics/skills](https://github.com/anthropics/skills), retains its original Apache-2.0 license (see `LICENSE.txt` in that skill's directory). |
+| [grilling](.agents/skills/grilling/SKILL.md) | Relentlessly stress-test plans and ideas through a decision tree, asking only questions whose prerequisites are settled. |
 | [pi-harness](.agents/skills/pi-harness/SKILL.md) | Operate and troubleshoot the Agent Pi harness in Coder workspaces (tmux session, provider config, `/login`). |
 
 ## Devcontainer
