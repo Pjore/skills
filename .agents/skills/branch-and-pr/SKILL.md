@@ -1,7 +1,7 @@
 ---
 name: branch-and-pr
 description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
-version: "1.7.0"
+version: "1.8.0"
 category: workflow
 ---
 
@@ -22,6 +22,8 @@ Read applicable Home/workspace instructions, then the target repository's root a
 this skill, use this procedure alone, not a second generic PR flow. Repository requirements
 constrain broader defaults and every path below. Use installed skills; dotagents installation
 or refresh is on explicit request only. Report a missing required skill instead of installing it.
+
+Use [GitHub CLI auth](references/github-auth.md) for HTTPS credential failures; never handle tokens manually.
 
 Classify the actual diff, not file extensions:
 
@@ -66,18 +68,20 @@ gh pr list --state open --json number,title,headRefName,isDraft --limit 20
 - Reuse related branches without asking; verify repo/target and update any PR.
 - For unrelated/unclear work on non-main, ask and wait; if new branch is chosen, fetch target
   base (default `main`), never active `HEAD`.
-- For dirty/unrelated worktrees, use a sibling from target base, transfer intended changes, and
-  leave the original untouched.
+- For dirty/unrelated worktrees, follow [worktree isolation](references/worktree-isolation.md):
+  use a sibling from target base, transfer intended changes, and leave the original untouched —
+  never switch, clean, or stash those edits.
 
 ## 2. Create the branch and draft PR
 
 Branch name: `<type>/<short-kebab-description>` — `type` is a Conventional Commit type (`feat`, `fix`, `refactor`, `test`, `chore`, `docs`); description lowercase, hyphens only, under ~40 chars (e.g. `fix/meeting-overlap-validation`).
 
-When creating a new branch, branch from the fetched target base, never the active branch:
+If no existing PR branch is being reused and no worktree was created in step 1, create the
+branch explicitly from the fetched target base, never the active branch:
 
 ```bash
 BASE=main
-BRANCH=docs/short-description
+BRANCH=fix/short-description
 git fetch origin "$BASE"
 git switch -c "$BRANCH" "origin/$BASE"
 ```
@@ -122,15 +126,7 @@ EOF
 )"
 ```
 
-For UI changes, capture a screenshot with the `agent-browser` CLI (see that skill — install it first if missing, don't substitute an ad hoc screenshot method) and host it on a persistent `screenshots` release — `gh` can't attach images to comments, and this keeps binaries out of git history:
-
-```bash
-gh release create screenshots --title "Screenshot Archive" \
-  --notes "Persistent archive of PR screenshots. Do not delete." --prerelease 2>/dev/null || true
-gh release upload screenshots /tmp/<pr>-<feature>-<variant>.png --clobber
-```
-
-Embed it in the comment as `![<description>](https://github.com/<OWNER>/<REPO>/releases/download/screenshots/<pr>-<feature>-<variant>.png)`.
+For UI PR screenshots, follow [screenshot archive](references/ui-screenshots.md).
 
 ## 5. Finalize
 
