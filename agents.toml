@@ -11,7 +11,7 @@ source = "getsentry/dotagents"
 
 [[skills]]
 name = "grilling"
-source = "mattpocock/skills"
+source = "pjore/skills"
 
 [[skills]]
 name = "domain-modeling"
