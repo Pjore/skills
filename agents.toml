@@ -10,9 +10,5 @@ name = "dotagents"
 source = "getsentry/dotagents"
 
 [[skills]]
-name = "grilling"
-source = "mattpocock/skills"
-
-[[skills]]
 name = "domain-modeling"
 source = "mattpocock/skills"
