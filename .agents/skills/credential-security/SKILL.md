@@ -22,7 +22,7 @@ If the repo's AGENTS.md names its own loader script, use that one instead. Alway
 | `cat .env` / `read_file .env` | Exposes all secrets to context |
 | `grep KEY .env` | Leaks matched secret values |
 | Hardcoded secrets in code | Committed to git = compromised |
-| `echo $API_KEY` | Prints full secret to terminal output |
+| Printing a credential or its prefix | Exposes credential material in terminal output |
 
 ## Setup
 
@@ -50,6 +50,10 @@ source "$(dirname "$0")/load-credentials.sh"
 # Count loaded variables — never print values
 env | grep -c "^[A-Z]"
 
-# Confirm a specific variable is set (masked)
-echo "API_KEY: ${API_KEY:0:8}..."
+# Confirm a specific variable is set without printing it
+if [[ -n "${API_KEY:-}" ]]; then
+  echo "API_KEY is set"
+else
+  echo "API_KEY is missing"
+fi
 ```
