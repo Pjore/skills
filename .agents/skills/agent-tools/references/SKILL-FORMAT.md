@@ -2,14 +2,14 @@
 
 An Agent Skill is a folder with a required `SKILL.md` and optional `scripts/`, `references/`, and `assets/`. The `name` and `description` metadata drive discovery; keep the skill focused and make its trigger explicit.
 
-## Choose instructions or a Skill
+## Choose AGENTS.md or a Skill
 
-| Use repository or custom instructions for | Use a Skill for |
+| Use `AGENTS.md` for | Use a Skill for |
 |---|---|
-| Rules that should always apply within a repository or matching file pattern | Task-specific workflows and domain knowledge |
+| Rules that should always apply within the repository or a directory subtree | Task-specific workflows and domain knowledge |
 | Architecture boundaries, coding conventions, persistent constraints | Procedures, reference summaries, templates, scripts, and examples |
 
-Prefer repository-specific instructions for facts the agent must always know. Use Skills for detailed guidance that is only needed for relevant work.
+Prefer the root or applicable nested `AGENTS.md` for facts that should always apply. Use Skills for detailed guidance needed only for relevant work.
 
 ## Frontmatter
 
@@ -24,13 +24,13 @@ description: What it does and when to use it, with concrete trigger phrases.
 - `description` must say what the skill does and when to use it; include user-facing trigger terms and keep it within the specification's limit.
 - Include only metadata supported by the Agent Skills specification and target tools.
 
-## Write useful instructions
+## Write useful Skill content
 
 - Start with actionable guidance for the agent, not onboarding prose.
 - Keep the Skill focused. Use imperative, concrete steps where order matters; use concise decision rules where judgment is expected.
 - Put long or rarely needed details in linked `references/`. Bundle scripts only for repeated, complex, or reliability-critical work.
 - Use relative links to bundled resources and check that every target exists.
-- Avoid duplicating the description, explaining basics, history, and hardcoded project commands in a reusable Skill. Point to the consuming repository's instructions for its commands.
+- Avoid duplicating the description, explaining basics, history, and hardcoded project commands in a reusable Skill. Point to the consuming repository's `AGENTS.md` for its commands.
 - Keep the body under 150 lines and 1,500 words where practical; split overflow into references.
 
 ## Audit and validate
@@ -43,7 +43,7 @@ description: What it does and when to use it, with concrete trigger phrases.
 ## Progressive disclosure
 
 1. **Metadata:** name and description support discovery.
-2. **Instructions:** load `SKILL.md` when the skill is relevant.
+2. **Skill content:** load `SKILL.md` when the skill is relevant.
 3. **Resources:** load references as needed; execute scripts only when the workflow calls for them.
 
 Keep the main file concise so agents can install multiple Skills without paying the full context cost for every Skill.
