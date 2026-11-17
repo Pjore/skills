@@ -68,9 +68,10 @@ gh pr list --state open --json number,title,headRefName,isDraft --limit 20
 - Reuse related branches without asking; verify repo/target and update any PR.
 - For unrelated/unclear work on non-main, ask and wait; if new branch is chosen, fetch target
   base (default `main`), never active `HEAD`.
-- For dirty/unrelated worktrees, follow [worktree isolation](references/worktree-isolation.md):
-  use a sibling from target base, transfer intended changes, and leave the original untouched —
-  never switch, clean, or stash those edits.
+- For dirty/unrelated worktrees, compare against the fetched target base before treating files as
+  unique changes; untracked paths may already exist in that base. Follow
+  [worktree isolation](references/worktree-isolation.md) to transfer only actual changes and leave
+  the original untouched — never switch, clean, or stash those edits.
 
 ## 2. Create the branch and draft PR
 
@@ -150,3 +151,5 @@ gh pr checks <PR> --required
 gh pr merge <PR> --squash --match-head-commit <reviewed-head-sha>
 gh pr view <PR> --json state,mergeCommit
 ```
+
+For cleanup, follow [worktree isolation](references/worktree-isolation.md).
