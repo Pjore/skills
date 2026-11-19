@@ -1,7 +1,7 @@
 ---
 name: branch-and-pr
-description: "Repository-selected branch and PR workflow, with a documentation-only fast path. Load before the first commit for features, fixes, plans, docs, or other changes requiring a branch and PR, even without an explicit 'create a PR' request. Replaces overlapping generic PR procedures, subject to the target repository's requirements."
-version: "1.8.0"
+description: "Repository-selected single or stacked PR workflow. Load before the first commit for changes requiring a PR. Replaces overlapping PR procedures, subject to repository requirements."
+version: "1.9.0"
 category: workflow
 ---
 
@@ -16,6 +16,10 @@ any related PR. Use explicit `--repo OWNER/REPO` for GitHub commands until confi
 - On `main`, always create a new branch from target base. On non-main, reuse the same change, a
   direct follow-up, or clearly related work without asking. Otherwise ask whether to reuse the
   active branch/PR or create a new branch; state context and wait. Honor explicit instructions.
+
+For phased or large changes that would overwhelm review in one PR, use focused, dependent PRs in
+a stack. The bottom PR targets the trunk; each higher PR targets the preceding PR's branch, not
+`main`. Use a single PR for smaller or independent changes. See [stacked PRs](references/stacked-prs.md).
 
 Read applicable Home/workspace instructions, then the target repository's root and nested
 `AGENTS.md`. Use the repository-selected PR workflow before the first commit; if it selects
@@ -32,8 +36,9 @@ Classify the actual diff, not file extensions:
   examples, behavioral agent instructions (`AGENTS.md`, `SKILL.md`, prompts or operational
   references), mixed changes, or uncertainty about runtime effects.
 
-For documentation-only changes, use step 1, the branch naming in step 2, step 3, then the
-documentation-only path below. Otherwise follow steps 1–6. Reclassify if scope grows.
+For documentation-only changes, use steps 1–3 and the documentation-only path. Otherwise follow
+steps 1–6. For stacks, apply checks per layer and use the stacked-PR reference for branch and
+submission commands.
 
 Choose verification by risk, not a mandatory full local suite:
 
@@ -77,8 +82,8 @@ gh pr list --state open --json number,title,headRefName,isDraft --limit 20
 
 Branch name: `<type>/<short-kebab-description>` — `type` is a Conventional Commit type (`feat`, `fix`, `refactor`, `test`, `chore`, `docs`); description lowercase, hyphens only, under ~40 chars (e.g. `fix/meeting-overlap-validation`).
 
-If no existing PR branch is being reused and no worktree was created in step 1, create the
-branch explicitly from the fetched target base, never the active branch:
+For a single PR, create a new branch from the fetched target base, never the active branch. A
+stack layer starts from its verified parent branch; see the stacked-PR reference:
 
 ```bash
 BASE=main
@@ -139,7 +144,8 @@ When every planned milestone is done:
 
 ## 6. Merge — only when the user asks
 
-Record the PR number and reviewed head SHA; inspect required checks and review requirements.
+For stacks, follow the stacked-PR merge requirements. For a single PR, record the PR and reviewed
+head SHA; inspect required checks and reviews.
 Do not bypass protections or treat unknown checks as passing. Merge the reviewed SHA, then
 verify the PR reports `MERGED`. Keep worktree cleanup separate; do not disturb another checkout.
 Use noninteractive CI output and at most one watcher; summarize failures and totals rather than
