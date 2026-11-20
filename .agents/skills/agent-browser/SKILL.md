@@ -1,10 +1,12 @@
 ---
 name: agent-browser
-description: Browser automation CLI for AI agents. Use when the user needs to interact with websites, including navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, testing web apps, or automating any browser task. Triggers include requests to "open a website", "fill out a form", "click a button", "take a screenshot", "scrape data from a page", "test this web app", "login to a site", "automate browser actions", or any task requiring programmatic web interaction.
+description: Headless browser automation CLI for agent-only web testing, navigation, form interactions, data extraction, and screenshot evidence. For an interactive page shared with the operator, prefer the built-in browser tools.
 allowed-tools: Bash(npx agent-browser:*), Bash(agent-browser:*)
 ---
 
 # Browser Automation with agent-browser
+
+For agent-only validation, run `agent-browser` where the application is reachable. If both run in the same host or container, use the app's loopback URL. For an interactive session with the operator, use the built-in browser and verify reachability from that browser; its `localhost` may differ from the agent shell's. A screenshot is evidence, not a shared interactive session.
 
 ## Installation
 
@@ -33,16 +35,18 @@ agent-browser snapshot -i
 agent-browser fill @e1 "user@example.com"
 agent-browser fill @e2 "password123"
 agent-browser click @e3
-agent-browser wait --load networkidle
+agent-browser wait --url "**/dashboard"
 agent-browser snapshot -i  # Check result
 ```
+
+Wait for the route, element, or result that proves the action succeeded. Network idle is not a reliable readiness signal for apps with persistent requests such as SSE.
 
 ## Command Chaining
 
 The browser persists between commands via a background daemon, so `&&`-chaining is safe. Chain when you don't need an intermediate command's output (open + wait + screenshot); run separately when you must read output first (snapshot → refs → interact).
 
 ```bash
-agent-browser open https://example.com && agent-browser wait --load networkidle && agent-browser screenshot page.png
+agent-browser open https://example.com && agent-browser wait 'h1' && agent-browser screenshot page.png
 ```
 
 ## Essential Commands
@@ -77,7 +81,7 @@ agent-browser get title               # Get page title
 
 # Wait
 agent-browser wait @e1                # Wait for element
-agent-browser wait --load networkidle # Wait for network idle
+agent-browser wait --load networkidle # Only if the page is expected to go idle
 agent-browser wait --url "**/page"    # Wait for URL pattern
 agent-browser wait 2000               # Wait milliseconds
 
@@ -149,7 +153,7 @@ EVALEOF
 
 Run them from the skill directory, e.g. `./templates/form-automation.sh https://example.com/form`.
 
-## Fallback: VS Code Browser Tools
+## Shared Browser or CLI Fallback
 
-When `agent-browser` is not installed, use VS Code built-in browser tools (load via `tool_search`).
+Use VS Code built-in browser tools for shared interaction, or as a fallback when `agent-browser` is unavailable (load via `tool_search`).
 See [references/vscode-fallback.md](references/vscode-fallback.md) for command mapping, pre-flight check, and Playwright context corruption warning.

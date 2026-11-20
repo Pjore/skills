@@ -1,6 +1,6 @@
 # agent-browser — VS Code Browser Tools Fallback
 
-When `agent-browser` is not installed, use VS Code built-in browser tools. Load them with `tool_search` first.
+Use VS Code built-in browser tools for interactive operator collaboration or when `agent-browser` is unavailable. Load them with `tool_search` first.
 
 ## Command Mapping
 
@@ -14,21 +14,20 @@ When `agent-browser` is not installed, use VS Code built-in browser tools. Load 
 
 ## Pre-flight Check (CRITICAL)
 
-Before calling `open_browser_page`, always verify the server responds:
+Before opening a development page, check the service is ready from the app host:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" http://localhost:<PORT>/
 ```
 
-If curl returns `200`, proceed. If not, wait for the server to be ready. **Never call `open_browser_page` against a port that isn't responding** — a timeout corrupts the Playwright browser context permanently for the session.
+Use the application's readiness signal; an auth redirect can be expected. A shell probe does not establish that the shared browser can reach the same URL. When the browser runs on another host, use a verified remote browser proxy or the exact private forwarded frontend address, not the shell's loopback URL.
 
 ## Playwright Context Corruption
 
-If `open_browser_page` times out, the page is left in a broken "Loading..." state. Multiple timed-out attempts **permanently corrupt the Playwright browser context** for the entire session — all subsequent browser tool calls fail.
+If `open_browser_page` times out, the page can remain in a broken "Loading..." state, and further browser actions may fail. Check the URL, forwarding and authentication before retrying.
 
 **Symptoms**: `browserContext.newPage: Cannot read properties of undefined (reading '_page')`
-**Recovery**: No in-session fix — ask the user to restart the VS Code/Coder session.
-**Prevention**: Always run the curl pre-flight check; if it fails, do NOT attempt `open_browser_page`.
+**Recovery**: If the browser remains unusable after correcting the route, ask the operator to reconnect or restart the browser session.
 
 ## After Service Restart
 
