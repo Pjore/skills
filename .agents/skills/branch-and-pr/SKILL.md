@@ -42,11 +42,11 @@ submission commands.
 
 Choose verification by risk, not a mandatory full local suite:
 
-| Diff | Local verification | Before merge |
-|------|--------------------|--------------|
-| Version-only conflict | Diff, package syntax and version | Applicable package CI |
-| Local behavior or behavioral instructions | Focused tests and relevant build/lint | Applicable required CI |
-| Shared contracts, dependencies, runtime or CI | Affected integration suites and builds | Full affected CI |
+| Diff                                          | Local verification                     | Before merge           |
+| --------------------------------------------- | -------------------------------------- | ---------------------- |
+| Version-only conflict                         | Diff, package syntax and version       | Applicable package CI  |
+| Local behavior or behavioral instructions     | Focused tests and relevant build/lint  | Applicable required CI |
+| Shared contracts, dependencies, runtime or CI | Affected integration suites and builds | Full affected CI       |
 
 Repository-required local checks override this table. Reuse prior results only for unchanged
 inputs. Do not duplicate full local and CI suites without a concrete risk or unavailable CI.
@@ -157,5 +157,10 @@ gh pr checks <PR> --required
 gh pr merge <PR> --squash --match-head-commit <reviewed-head-sha>
 gh pr view <PR> --json state,mergeCommit
 ```
+
+If `gh pr checks` fails because check/status APIs are inaccessible, do not infer success from
+`mergeStateStatus` or treat the CLI error as a failed check. Use an available GitHub PR
+check-run/status reader, confirm its results belong to the reviewed head SHA, and verify all
+required checks and reviews. If the required state cannot be verified, stop without merging.
 
 For cleanup, follow [worktree isolation](references/worktree-isolation.md).
