@@ -19,7 +19,7 @@ Any agent tool that reads `.agents/skills/` (Claude Code, Cursor, Codex, GitHub 
 
 | Skill | Description |
 |---|---|
-| [agent-browser](.agents/skills/agent-browser/SKILL.md) | Browser automation CLI for AI agents — navigate, fill forms, click, screenshot, scrape, test web apps. |
+| [agent-browser](.agents/skills/agent-browser/SKILL.md) | Browser automation, human-assisted login with private live QR viewing, and scoped browser-to-loopback handoff. |
 | [agent-tools](.agents/skills/agent-tools/SKILL.md) | Guide to choosing, authoring, and maintaining repository guidance in root or nested `AGENTS.md` files and Agent Skills. |
 | [branch-and-pr](.agents/skills/branch-and-pr/SKILL.md) | Repository-first single and stacked PR workflows, with reviewable phases, base-safe worktree isolation, and GitHub CLI auth. |
 | [clean-architecture-dry](.agents/skills/clean-architecture-dry/SKILL.md) | Clean Architecture and DRY principles for module boundaries, service/repository abstractions, and duplication review. |

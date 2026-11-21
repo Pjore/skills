@@ -1,159 +1,86 @@
 ---
 name: agent-browser
-description: Headless browser automation CLI for agent-only web testing, navigation, form interactions, data extraction, and screenshot evidence. For an interactive page shared with the operator, prefer the built-in browser tools.
+description: Browser automation for navigation, forms, web testing, screenshots, and human-assisted login. Use for website interaction, BankID/2FA, rotating QR codes, private live browser views, or browser-to-localhost session handoff.
 allowed-tools: Bash(npx agent-browser:*), Bash(agent-browser:*)
 ---
 
-# Browser Automation with agent-browser
+# Browser Automation
 
-For agent-only validation, run `agent-browser` where the application is reachable. If both run in the same host or container, use the app's loopback URL. For an interactive session with the operator, use the built-in browser and verify reachability from that browser; its `localhost` may differ from the agent shell's. A screenshot is evidence, not a shared interactive session.
+Use a named session; keep it for the whole task. For shared interaction prefer an available
+built-in browser, or the CLI's private live dashboard. A screenshot is not an interactive view.
+Verify reachability from the actual browser: its `localhost` may differ from the agent shell's.
+
+## Core loop
+
+```bash
+agent-browser --session task open https://example.com
+agent-browser --session task snapshot -i
+agent-browser --session task click @e3
+agent-browser --session task wait --url '**/result'
+agent-browser --session task snapshot -i
+```
+
+Refs expire on navigation or DOM changes. Read fresh refs before acting. Chain commands only
+when no intermediate decision depends on their output. Wait for a specific route, element, or
+result; persistent SSE/polling makes network idle unreliable.
+
+## Human authentication
+
+- BankID and other rotating QR challenges need a **live view**, not chat screenshots, GIFs,
+  or recordings. Establish private viewing first; start a fresh challenge after the human
+  confirms the page is visible. The human approves only the expected relying party.
+- For remote viewing, loopback handoff, and permission troubleshooting, load only
+  [references/live-auth.md](references/live-auth.md). It includes the temporary CDP helper.
+- Never print cookies, storage, auth URLs, CDP capabilities, or token-bearing network traffic.
+  Return only origin, presence/expiry, success, or counts. Keep credentials out of shell args.
+- Pause competing renewal owners before transferring a session. Login success, live access,
+  and automatic renewal are separate checks. Close task-owned viewers/receivers afterwards.
+
+## Keep tool output small
+
+Use `snapshot -i`, a scoped snapshot, or a targeted `eval` returning metadata. Inspect tabs if
+a click seems not to navigate. Do not dump a long login-provider list to find one link.
+Use focused `stream --help` or `dashboard --help` for version-sensitive features, not the full
+CLI help or `skills get core --full` bundle. Load only the reference needed for the current step.
+Keep diagnostics to one failed stage and one discriminating check; do not repeat auth attempts.
 
 ## Installation
 
-```bash
-npm install -g agent-browser
-agent-browser install --with-deps   # x86_64: download Chrome + system deps
-agent-browser doctor                # verify install; shows which Chrome it found
-```
-
-On ARM64 Linux, `agent-browser install` has no Chrome build — see [references/installation.md](references/installation.md#arm64-linux).
-
-## Core Workflow
-
-Every browser automation follows this pattern:
-
-1. **Navigate**: `agent-browser open <url>`
-2. **Snapshot**: `agent-browser snapshot -i` (get element refs like `@e1`, `@e2`)
-3. **Interact**: Use refs to click, fill, select
-4. **Re-snapshot**: After navigation or DOM changes, get fresh refs
+Use the installed global binary. Install/update only when requested or necessary for the task.
 
 ```bash
-agent-browser open https://example.com/form
-agent-browser snapshot -i
-# Output: @e1 [input type="email"], @e2 [input type="password"], @e3 [button] "Submit"
-
-agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
-agent-browser click @e3
-agent-browser wait --url "**/dashboard"
-agent-browser snapshot -i  # Check result
+agent-browser install --with-deps
 ```
 
-Wait for the route, element, or result that proves the action succeeded. Network idle is not a reliable readiness signal for apps with persistent requests such as SSE.
+On ARM64, test the current CLI/cache before assuming Chrome is unavailable. For an existing
+binary failing on shared libraries, inspect `ldd <chrome> | grep 'not found'`; install missing
+system dependencies instead of downloading another browser. See
+[references/installation.md](references/installation.md).
 
-## Command Chaining
-
-The browser persists between commands via a background daemon, so `&&`-chaining is safe. Chain when you don't need an intermediate command's output (open + wait + screenshot); run separately when you must read output first (snapshot → refs → interact).
+## Focused commands and references
 
 ```bash
-agent-browser open https://example.com && agent-browser wait 'h1' && agent-browser screenshot page.png
+agent-browser --session task snapshot -s '#main'
+agent-browser --session task screenshot /tmp/evidence.png
+agent-browser --session task tab list
+agent-browser --session task eval --stdin < metadata.js
+agent-browser --session task close
 ```
 
-## Essential Commands
+| Reference | Load for |
+|---|---|
+| [commands](references/commands.md) | Specific command/options, semantic locators |
+| [snapshot-refs](references/snapshot-refs.md) | Ref lifecycle and annotated screenshots |
+| [session-management](references/session-management.md) | Named sessions and state persistence |
+| [live-auth](references/live-auth.md) | Rotating QR, private dashboard, loopback permission |
+| [authentication](references/authentication.md) | Other login/state patterns; apply credential-safety rules above |
+| [installation](references/installation.md) | Browser binaries, ARM64, libraries, configuration |
+| [vscode-fallback](references/vscode-fallback.md) | Built-in browser fallback and context warnings |
+| [testing-patterns](references/testing-patterns.md) | UI testing and evidence |
+| [browser-tool-comparison](references/browser-tool-comparison.md) | Choosing shared browser vs CLI |
+| [proxy-support](references/proxy-support.md) | Proxy configuration |
+| [video-recording](references/video-recording.md) | Non-authentication recordings |
 
-```bash
-# Navigation
-agent-browser open <url>              # Navigate (aliases: goto, navigate)
-agent-browser close                   # Close browser
-
-# Snapshot
-agent-browser snapshot -i             # Interactive elements with refs (recommended)
-agent-browser snapshot -i -C          # Include cursor-interactive elements (divs with onclick, cursor:pointer)
-agent-browser snapshot -s "#selector" # Scope to CSS selector
-
-# Interaction (use @refs from snapshot)
-agent-browser click @e1               # Click element
-agent-browser click @e1 --new-tab     # Click and open in new tab
-agent-browser fill @e2 "text"         # Clear and type text
-agent-browser type @e2 "text"         # Type without clearing
-agent-browser select @e1 "option"     # Select dropdown option
-agent-browser check @e1               # Check checkbox
-agent-browser press Enter             # Press key
-agent-browser keyboard type "text"    # Type at current focus (no selector)
-agent-browser keyboard inserttext "text"  # Insert without key events
-agent-browser scroll down 500         # Scroll page (amount must be > 0; top: eval 'window.scrollTo(0,0)')
-agent-browser scroll down 500 --selector "div.content"  # Scroll within a specific container
-
-# Get information
-agent-browser get text @e1            # Get element text
-agent-browser get url                 # Get current URL
-agent-browser get title               # Get page title
-
-# Wait
-agent-browser wait @e1                # Wait for element
-agent-browser wait --load networkidle # Only if the page is expected to go idle
-agent-browser wait --url "**/page"    # Wait for URL pattern
-agent-browser wait 2000               # Wait milliseconds
-
-# Downloads
-agent-browser download @e1 ./file.pdf          # Click element to trigger download
-agent-browser wait --download ./output.zip     # Wait for any download to complete
-agent-browser --download-path ./downloads open <url>  # Set default download directory
-
-# Capture
-agent-browser screenshot              # Screenshot to temp dir
-agent-browser screenshot file.png     # Screenshot to specific path
-agent-browser screenshot --full       # Full page screenshot
-agent-browser screenshot --annotate   # Annotated screenshot with numbered element labels
-agent-browser pdf output.pdf          # Save as PDF
-# Long or variable-laden target paths: screenshot to /tmp/ first, then cp.
-
-# Diff (compare page states)
-agent-browser diff snapshot                          # Current vs last snapshot (--baseline <file> for a saved one)
-agent-browser diff screenshot --baseline before.png  # Visual pixel diff
-agent-browser diff url <url1> <url2>                 # Compare two pages (--selector, --wait-until)
-```
-
-Save login state for reuse: `agent-browser state save ./auth-state.json` (see [references/authentication.md](references/authentication.md)).
-
-## Ref Invalidation — Critical Rule
-
-Refs (`@e1`, …) are invalidated when the page changes. Re-run `snapshot -i` after any navigation, form submission, or dynamic content load (dropdowns, modals) before using a ref again.
-
-## Annotated Screenshots (Vision Mode)
-
-`agent-browser screenshot --annotate` overlays numbered labels on interactive elements and prints a legend (`[2] @e2 link "Home"`); the refs are cached, so `click @e2` works without a separate snapshot. Use it for icon-only buttons, canvas/charts, layout checks, or spatial reasoning.
-
-## Semantic Locators and eval
-
-When refs are unreliable, use `agent-browser find text|label|role|placeholder|testid …` (see [references/commands.md](references/commands.md#semantic-locators-alternative-to-refs)).
-
-For `eval`, single-quote simple one-liners (`agent-browser eval 'document.title'`). For nested quotes, arrow functions, or multiline JS use a heredoc, which avoids shell-quoting corruption:
-
-```bash
-agent-browser eval --stdin <<'EVALEOF'
-JSON.stringify([...document.querySelectorAll("a")].map(a => a.href))
-EVALEOF
-```
-
-> **Configuration:** See [references/installation.md](references/installation.md#configuration-file) for `agent-browser.json` setup and option reference.
-
-## Deep-Dive Documentation
-
-| Reference | When to Use |
-|-----------|-------------|
-| [references/commands.md](references/commands.md) | Full command reference with all options |
-| [references/snapshot-refs.md](references/snapshot-refs.md) | Ref lifecycle, invalidation rules, troubleshooting |
-| [references/session-management.md](references/session-management.md) | Parallel sessions, state persistence, concurrent scraping |
-| [references/authentication.md](references/authentication.md) | Login flows, OAuth, 2FA handling, state reuse |
-| [references/video-recording.md](references/video-recording.md) | Recording workflows for debugging and documentation |
-| [references/proxy-support.md](references/proxy-support.md) | Proxy configuration, geo-testing, rotating proxies |
-| [references/installation.md](references/installation.md) | Installation, ARM64 setup, configuration file reference |
-| [references/vscode-fallback.md](references/vscode-fallback.md) | VS Code browser tools fallback, pre-flight check, context corruption |
-| [references/testing-patterns.md](references/testing-patterns.md) | Frontend testing recipes — pointer-based drag-and-drop, noise filtering, visual regression |
-| [references/browser-tool-comparison.md](references/browser-tool-comparison.md) | When to use `agent-browser` vs. the built-in browser tool, with a full capability comparison |
-
-## Ready-to-Use Templates
-
-| Template | Description |
-|----------|-------------|
-| [templates/form-automation.sh](templates/form-automation.sh) | Form filling with validation |
-| [templates/authenticated-session.sh](templates/authenticated-session.sh) | Login once, reuse state |
-| [templates/capture-workflow.sh](templates/capture-workflow.sh) | Content extraction with screenshots |
-
-Run them from the skill directory, e.g. `./templates/form-automation.sh https://example.com/form`.
-
-## Shared Browser or CLI Fallback
-
-Use VS Code built-in browser tools for shared interaction, or as a fallback when `agent-browser` is unavailable (load via `tool_search`).
-See [references/vscode-fallback.md](references/vscode-fallback.md) for command mapping, pre-flight check, and Playwright context corruption warning.
+Templates: [forms](templates/form-automation.sh),
+[authenticated sessions](templates/authenticated-session.sh),
+[capture](templates/capture-workflow.sh). Do not use templates to expose login secrets.
