@@ -12,7 +12,9 @@ Prefer the global `agent-browser` binary over `npx agent-browser` (faster startu
 
 ## ARM64 Linux
 
-`agent-browser install` has no Linux ARM64 Chrome build. Use any other Chromium:
+Check the installed CLI version and existing cache first: ARM64 download support varies by
+version. A cached Chromium that starts successfully needs no replacement. If no compatible
+binary is available, use:
 
 - **Debian/Ubuntu `chromium` package** (`/usr/bin/chromium`) — auto-detected, no config needed.
 - **Playwright Chromium** — point agent-browser at it. `--with-deps` installs the system shared
@@ -31,6 +33,10 @@ Prefer the global `agent-browser` binary over `npx agent-browser` (faster startu
   install the listed packages manually first, then rerun without `--with-deps`.
 
   Or per invocation: `--executable-path <path>` / `AGENT_BROWSER_EXECUTABLE_PATH`.
+
+For a cached binary that exits with a missing-library error, run
+`ldd <chrome> | grep 'not found'` and install those dependencies once; do not redownload Chrome.
+Use the distribution's package names (for example `libasound2t64` on Ubuntu 24.04).
 
 Run `agent-browser doctor` to confirm which binary is picked up. Note: `doctor`'s own launch test
 only checks its standard cache locations and ignores `--executable-path`/config — a passing
