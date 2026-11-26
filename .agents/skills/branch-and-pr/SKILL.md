@@ -1,6 +1,6 @@
 ---
 name: branch-and-pr
-description: "Repository-selected single or stacked PR workflow. Load before the first commit for changes requiring a PR. Replaces overlapping PR procedures, subject to repository requirements."
+description: "Repository-selected single or stacked PR workflow, including review feedback. Load before the first commit for changes requiring a PR or when addressing PR review comments. Replaces overlapping PR procedures, subject to repository requirements."
 version: "1.9.0"
 category: workflow
 ---
@@ -115,6 +115,10 @@ The title is a Conventional Commit subject. Keep the PR URL for comments. [templ
 ## 3. Commit and push
 
 Follow the `commit-work` skill for every commit: one concern per commit, Conventional Commits, explicit staging, and the chosen path's checks plus repository-required checks passing first. Push after every commit or small cluster of commits.
+
+## Review feedback
+
+When addressing or replying to PR review comments, follow [review feedback](references/review-feedback.md).
 
 ## 4. Milestone comments
 
